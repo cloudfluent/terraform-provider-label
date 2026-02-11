@@ -1,0 +1,61 @@
+---
+page_title: "label Provider"
+description: |-
+  The label provider generates consistent resource identifiers and tags for organizations with complex infrastructure naming conventions.
+---
+
+# label Provider
+
+The `label` provider encodes your organization's naming convention as a Terraform provider. Define naming components once at the provider level — tenant, environment, stage, workspace — and every data source inherits them automatically. All values are computed at plan time with zero Terraform state.
+
+- **Provider-level defaults** inherited by every data source instance
+- **Per-resource overrides** for delimiter, qualifier, and instance key
+- **Consistent tags** including `Name`, `Tenant`, `Environment`, `Stage`, `Namespace`, and `Attributes`
+- **`for_each` support** for creating multiple labels of the same resource type
+
+## ID Format
+
+The generated identifier follows this order:
+
+```
+{tenant}-{environment}-{resource_type}-{stage}-{qualifier}-{domain}-{instance_key}
+```
+
+The **domain** is automatically extracted from the `workspace` value by dropping the first segment:
+
+| workspace | domain |
+|-----------|--------|
+| `data-sales-api` | `sales-api` |
+| `dms-sales-api-orders` | `sales-api-orders` |
+| `eks-v1_34` | `v1_34` |
+| `vpc` | _(none)_ |
+
+## Environment Variable Fallbacks
+
+Every provider attribute falls back to an environment variable when not set in HCL:
+
+| Attribute | Environment Variable |
+|-----------|---------------------|
+| `tenant` | `LABEL_TENANT` |
+| `environment` | `LABEL_ENVIRONMENT` |
+| `stage` | `LABEL_STAGE` |
+| `workspace` | `LABEL_WORKSPACE` |
+| `namespace` | `LABEL_NAMESPACE` |
+| `delimiter` | `LABEL_DELIMITER` |
+
+## CI/CD Integration
+
+Organizations using external Terraform CI/CD tools (Scalr, Terraform Cloud, Spacelift, etc.) that manage workspaces as an abstraction layer can inject all naming components via environment variables. This keeps the Terraform code workspace-agnostic — the same configuration deploys to any environment without modification.
+
+```terraform
+# No hardcoded values — everything comes from the CI/CD environment
+provider "label" {}
+```
+
+The CI/CD tool sets the variables per workspace, so `dev` and `prd` share identical `.tf` files and only differ by the injected environment.
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Example Usage
+
+{{ tffile "examples/provider/provider.tf" }}
