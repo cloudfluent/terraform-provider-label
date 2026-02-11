@@ -18,17 +18,10 @@ The `label` provider encodes your organization's naming convention as a Terrafor
 The generated identifier follows this order:
 
 ```
-{tenant}-{environment}-{resource_type}-{stage}-{qualifier}-{domain}-{instance_key}
+{tenant}-{environment}-{resource_type}-{stage}-{qualifier}-{workspace}-{instance_key}
 ```
 
-The **domain** is automatically extracted from the `workspace` value by dropping the first segment:
-
-| workspace | domain |
-|-----------|--------|
-| `data-sales-api` | `sales-api` |
-| `dms-sales-api-orders` | `sales-api-orders` |
-| `eks-v1_34` | `v1_34` |
-| `vpc` | _(none)_ |
+Empty segments are skipped. The `workspace` value is included as-is in the identifier.
 
 ## Environment Variable Fallbacks
 
@@ -64,7 +57,7 @@ The CI/CD tool sets the variables per workspace, so `dev` and `prd` share identi
 - `namespace` (String) Namespace for tags (e.g. acme). Falls back to LABEL_NAMESPACE env var.
 - `stage` (String) Stage (e.g. dev, prd). Falls back to LABEL_STAGE env var.
 - `tenant` (String) Tenant identifier (e.g. dpl). Falls back to LABEL_TENANT env var.
-- `workspace` (String) Workspace name for domain extraction (e.g. data-sales-api). Falls back to LABEL_WORKSPACE env var.
+- `workspace` (String) Workspace name included in resource identifiers (e.g. sales-api). Falls back to LABEL_WORKSPACE env var.
 
 ## Example Usage
 
@@ -73,7 +66,7 @@ provider "label" {
   tenant      = "dpl"
   environment = "ane2"
   stage       = "dev"
-  workspace   = "data-sales-api"
+  workspace   = "sales-api"
   namespace   = "acme"
   # delimiter = "-"  # default
 }

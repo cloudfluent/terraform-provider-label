@@ -50,7 +50,7 @@ func (p *LabelProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp
 			},
 			"workspace": schema.StringAttribute{
 				Optional:    true,
-				Description: "Workspace name for domain extraction (e.g. data-sales-api). Falls back to LABEL_WORKSPACE env var.",
+				Description: "Workspace name included in resource identifiers (e.g. sales-api). Falls back to LABEL_WORKSPACE env var.",
 			},
 			"namespace": schema.StringAttribute{
 				Optional:    true,

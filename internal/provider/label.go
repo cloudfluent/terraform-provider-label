@@ -14,25 +14,24 @@ type LabelConfig struct {
 	Delimiter   string // default "-", override via LABEL_DELIMITER
 }
 
-// ExtractDomain splits the workspace name and drops the first token.
-// e.g. "data-sales-api" → ["sales", "api"], "vpc" → []
-func ExtractDomain(workspace string) []string {
-	parts := strings.Split(workspace, "-")
-	if len(parts) <= 1 {
+// SplitWorkspace splits the workspace name by "-" into segments.
+// e.g. "sales-api" → ["sales", "api"], "vpc" → ["vpc"], "" → []
+func SplitWorkspace(workspace string) []string {
+	if workspace == "" {
 		return nil
 	}
-	return parts[1:]
+	return strings.Split(workspace, "-")
 }
 
 // GenerateID builds an identifier string from the label components.
-// Order: {tenant}{d}{environment}{d}{resource_type}{d}{stage}{d}{qualifier}{d}{domain}{d}{instance_key}
+// Order: {tenant}{d}{environment}{d}{resource_type}{d}{stage}{d}{qualifier}{d}{workspace}{d}{instance_key}
 // Empty segments are skipped.
 func GenerateID(cfg *LabelConfig, resourceType string, qualifier string, instanceKey string, delimiter string) string {
 	if delimiter == "" {
 		delimiter = cfg.Delimiter
 	}
 
-	domain := ExtractDomain(cfg.Workspace)
+	ws := SplitWorkspace(cfg.Workspace)
 
 	parts := []string{
 		cfg.Tenant,
@@ -45,7 +44,7 @@ func GenerateID(cfg *LabelConfig, resourceType string, qualifier string, instanc
 		parts = append(parts, qualifier)
 	}
 
-	parts = append(parts, domain...)
+	parts = append(parts, ws...)
 
 	if instanceKey != "" {
 		parts = append(parts, instanceKey)
@@ -58,13 +57,13 @@ func GenerateID(cfg *LabelConfig, resourceType string, qualifier string, instanc
 func GenerateTags(cfg *LabelConfig, resourceType string, qualifier string, instanceKey string, delimiter string) map[string]string {
 	name := GenerateID(cfg, resourceType, qualifier, instanceKey, delimiter)
 
-	domain := ExtractDomain(cfg.Workspace)
+	ws := SplitWorkspace(cfg.Workspace)
 
 	var attrParts []string
 	if qualifier != "" {
 		attrParts = append(attrParts, qualifier)
 	}
-	attrParts = append(attrParts, domain...)
+	attrParts = append(attrParts, ws...)
 	if instanceKey != "" {
 		attrParts = append(attrParts, instanceKey)
 	}

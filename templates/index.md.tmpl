@@ -18,17 +18,10 @@ The `label` provider encodes your organization's naming convention as a Terrafor
 The generated identifier follows this order:
 
 ```
-{tenant}-{environment}-{resource_type}-{stage}-{qualifier}-{domain}-{instance_key}
+{tenant}-{environment}-{resource_type}-{stage}-{qualifier}-{workspace}-{instance_key}
 ```
 
-The **domain** is automatically extracted from the `workspace` value by dropping the first segment:
-
-| workspace | domain |
-|-----------|--------|
-| `data-sales-api` | `sales-api` |
-| `dms-sales-api-orders` | `sales-api-orders` |
-| `eks-v1_34` | `v1_34` |
-| `vpc` | _(none)_ |
+Empty segments are skipped. The `workspace` value is included as-is in the identifier.
 
 ## Environment Variable Fallbacks
 

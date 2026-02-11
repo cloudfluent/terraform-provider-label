@@ -114,9 +114,6 @@ func (d *LabelDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	if d.config.Stage == "" {
 		missing = append(missing, "stage")
 	}
-	if d.config.Workspace == "" {
-		missing = append(missing, "workspace")
-	}
 	if len(missing) > 0 {
 		resp.Diagnostics.AddError(
 			"Incomplete Provider Configuration",

@@ -29,7 +29,7 @@ provider "label" {
   tenant      = "dpl"
   environment = "ane2"
   stage       = "dev"
-  workspace   = "data-sales-api"
+  workspace   = "sales-api"
   namespace   = "acme"
 }
 `
@@ -202,7 +202,7 @@ provider "label" {
   tenant      = "dpl"
   environment = "ane2"
   stage       = "dev"
-  workspace   = "data-sales-api"
+  workspace   = "sales-api"
   namespace   = "acme"
   delimiter   = "_"
 }
@@ -224,7 +224,7 @@ output "id" {
 	})
 }
 
-// TestLabelDataSource_VpcWorkspace tests no-domain workspace (vpc).
+// TestLabelDataSource_VpcWorkspace tests single-segment workspace.
 func TestLabelDataSource_VpcWorkspace(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
@@ -262,14 +262,15 @@ output "sg_tags" {
 }
 `,
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownOutputValue("sg_id", knownvalue.StringExact("dpl-ane2-sg-dev")),
-					statecheck.ExpectKnownOutputValue("sbn_id", knownvalue.StringExact("dpl-ane2-sbn-dev-pri-01")),
+					statecheck.ExpectKnownOutputValue("sg_id", knownvalue.StringExact("dpl-ane2-sg-dev-vpc")),
+					statecheck.ExpectKnownOutputValue("sbn_id", knownvalue.StringExact("dpl-ane2-sbn-dev-pri-vpc-01")),
 					statecheck.ExpectKnownOutputValue("sg_tags", knownvalue.MapExact(map[string]knownvalue.Check{
-						"Name":        knownvalue.StringExact("dpl-ane2-sg-dev"),
+						"Name":        knownvalue.StringExact("dpl-ane2-sg-dev-vpc"),
 						"Namespace":   knownvalue.StringExact("acme"),
 						"Tenant":      knownvalue.StringExact("dpl"),
 						"Environment": knownvalue.StringExact("ane2"),
 						"Stage":       knownvalue.StringExact("dev"),
+						"Attributes":  knownvalue.StringExact("vpc"),
 					})),
 				},
 			},
@@ -277,8 +278,8 @@ output "sg_tags" {
 	})
 }
 
-// TestLabelDataSource_DmsMultiPartDomain tests workspace with 3+ domain segments.
-func TestLabelDataSource_DmsMultiPartDomain(t *testing.T) {
+// TestLabelDataSource_MultiSegmentWorkspace tests workspace with 3+ segments.
+func TestLabelDataSource_MultiSegmentWorkspace(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -288,7 +289,7 @@ provider "label" {
   tenant      = "dpl"
   environment = "ane2"
   stage       = "dev"
-  workspace   = "dms-sales-api-orders"
+  workspace   = "sales-api-orders"
   namespace   = "acme"
 }
 
@@ -341,7 +342,7 @@ provider "label" {
   tenant      = "dpl"
   environment = "ane2"
   stage       = "prd"
-  workspace   = "data-sales-api"
+  workspace   = "sales-api"
   namespace   = "acme"
 }
 
@@ -362,7 +363,7 @@ output "id" {
 	})
 }
 
-// TestLabelDataSource_EksWorkspace tests underscore-containing domain.
+// TestLabelDataSource_EksWorkspace tests underscore-containing workspace.
 func TestLabelDataSource_EksWorkspace(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
@@ -390,14 +391,14 @@ output "tags" {
 }
 `,
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownOutputValue("id", knownvalue.StringExact("dpl-ane2-sg-dev-v1_34")),
+					statecheck.ExpectKnownOutputValue("id", knownvalue.StringExact("dpl-ane2-sg-dev-eks-v1_34")),
 					statecheck.ExpectKnownOutputValue("tags", knownvalue.MapExact(map[string]knownvalue.Check{
-						"Name":        knownvalue.StringExact("dpl-ane2-sg-dev-v1_34"),
+						"Name":        knownvalue.StringExact("dpl-ane2-sg-dev-eks-v1_34"),
 						"Namespace":   knownvalue.StringExact("acme"),
 						"Tenant":      knownvalue.StringExact("dpl"),
 						"Environment": knownvalue.StringExact("ane2"),
 						"Stage":       knownvalue.StringExact("dev"),
-						"Attributes":  knownvalue.StringExact("v1_34"),
+						"Attributes":  knownvalue.StringExact("eks-v1_34"),
 					})),
 				},
 			},
@@ -434,6 +435,55 @@ output "tags" {
 						"Environment": knownvalue.StringExact("ane2"),
 						"Stage":       knownvalue.StringExact("dev"),
 						"Attributes":  knownvalue.StringExact("sales-api-shared-pii"),
+					})),
+				},
+			},
+		},
+	})
+}
+
+// TestLabelDataSource_EmptyWorkspace tests that workspace is optional.
+func TestLabelDataSource_EmptyWorkspace(t *testing.T) {
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testProviderConfig + `
+provider "label" {
+  tenant      = "dpl"
+  environment = "ane2"
+  stage       = "dev"
+}
+
+data "label" "vpc" {
+  resource_type = "vpc"
+}
+
+data "label" "sbn" {
+  resource_type = "sbn"
+  instance_key  = "01"
+}
+
+output "vpc_id" {
+  value = data.label.vpc.id
+}
+
+output "sbn_id" {
+  value = data.label.sbn.id
+}
+
+output "vpc_tags" {
+  value = data.label.vpc.tags
+}
+`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownOutputValue("vpc_id", knownvalue.StringExact("dpl-ane2-vpc-dev")),
+					statecheck.ExpectKnownOutputValue("sbn_id", knownvalue.StringExact("dpl-ane2-sbn-dev-01")),
+					statecheck.ExpectKnownOutputValue("vpc_tags", knownvalue.MapExact(map[string]knownvalue.Check{
+						"Name":        knownvalue.StringExact("dpl-ane2-vpc-dev"),
+						"Tenant":      knownvalue.StringExact("dpl"),
+						"Environment": knownvalue.StringExact("ane2"),
+						"Stage":       knownvalue.StringExact("dev"),
 					})),
 				},
 			},

@@ -65,7 +65,7 @@ resource "aws_security_group" "emr" {
 
 ## ID Composition Examples
 
-Given provider config `tenant=dpl, environment=ane2, stage=dev, workspace=data-sales-api`:
+Given provider config `tenant=dpl, environment=ane2, stage=dev, workspace=sales-api`:
 
 | resource_type | qualifier | instance_key | delimiter | Result |
 |---------------|-----------|--------------|-----------|--------|

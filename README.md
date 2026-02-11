@@ -40,7 +40,7 @@ provider "label" {
   tenant      = "dpl"
   environment = "ane2"
   stage       = "dev"
-  workspace   = "data-sales-api"
+  workspace   = "sales-api"
   namespace   = "acme"
   # delimiter = "-"  # default
 }
@@ -70,10 +70,10 @@ The CI/CD tool sets the environment variables per workspace:
 
 ```bash
 # dev workspace
-LABEL_TENANT=dpl  LABEL_ENVIRONMENT=ane2  LABEL_STAGE=dev  LABEL_WORKSPACE=data-sales-api  LABEL_NAMESPACE=acme
+LABEL_TENANT=dpl  LABEL_ENVIRONMENT=ane2  LABEL_STAGE=dev  LABEL_WORKSPACE=sales-api  LABEL_NAMESPACE=acme
 
 # prd workspace
-LABEL_TENANT=dpl  LABEL_ENVIRONMENT=ane2  LABEL_STAGE=prd  LABEL_WORKSPACE=data-sales-api  LABEL_NAMESPACE=acme
+LABEL_TENANT=dpl  LABEL_ENVIRONMENT=ane2  LABEL_STAGE=prd  LABEL_WORKSPACE=sales-api  LABEL_NAMESPACE=acme
 ```
 
 This way, `dev` and `prd` share identical `.tf` files and only differ by the injected variables.
@@ -95,17 +95,10 @@ resource "aws_security_group" "emr" {
 ### ID Format
 
 ```
-{tenant}-{environment}-{resource_type}-{stage}-{qualifier}-{domain}-{instance_key}
+{tenant}-{environment}-{resource_type}-{stage}-{qualifier}-{workspace}-{instance_key}
 ```
 
-The **domain** is extracted from the `workspace` value by dropping the first segment:
-
-| workspace | domain |
-|-----------|--------|
-| `data-sales-api` | `sales-api` |
-| `dms-sales-api-orders` | `sales-api-orders` |
-| `eks-v1_34` | `v1_34` |
-| `vpc` | _(none)_ |
+Empty segments are skipped. The `workspace` value is included as-is in the identifier.
 
 ### Examples
 
